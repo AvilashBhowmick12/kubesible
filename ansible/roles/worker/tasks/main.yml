@@ -1,0 +1,11 @@
+- name: Fetch join cmd
+  delegate_to: "{{ groups['control'][0] }}"
+  fetch:
+    src: /tmp/join.sh
+    dest: /tmp/join.sh
+    flat: yes
+
+- name: Join cluster
+  command: sh /tmp/join.sh
+  args:
+    creates: /etc/kubernetes/kubelet.conf
