@@ -1,23 +1,52 @@
-- name: Init cluster
+- name: Initialize Kubernetes cluster
   command: kubeadm init --pod-network-cidr=192.168.0.0/16
   args:
     creates: /etc/kubernetes/admin.conf
 
-- name: Setup kubeconfig
-  shell: |
-    mkdir -p /home/ubuntu/.kube
-    cp /etc/kubernetes/admin.conf /home/ubuntu/.kube/config
-    chown ubuntu:ubuntu /home/ubuntu/.kube/config
+# ✅ Setup kubeconfig for ubuntu user
+- name: Create .kube directory for ubuntu
+  file:
+    path: /home/ubuntu/.kube
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+    mode: '0755'
 
+- name: Copy kubeconfig to ubuntu user
+  copy:
+    src: /etc/kubernetes/admin.conf
+    dest: /home/ubuntu/.kube/config
+    remote_src: yes
+    owner: ubuntu
+    group: ubuntu
+    mode: '0644'
+
+# ✅ Setup kubeconfig for root (VERY IMPORTANT)
+- name: Create .kube directory for root
+  file:
+    path: /root/.kube
+    state: directory
+
+- name: Copy kubeconfig to root
+  copy:
+    src: /etc/kubernetes/admin.conf
+    dest: /root/.kube/config
+    remote_src: yes
+
+# ✅ Install Calico network plugin
 - name: Install Calico
   command: kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
   environment:
     KUBECONFIG: /etc/kubernetes/admin.conf
 
-- name: Generate join cmd
+# ✅ Generate join command
+- name: Generate join command
   command: kubeadm token create --print-join-command
   register: join_cmd
 
-- copy:
+# ✅ Save join command for worker
+- name: Save join command to file
+  copy:
     content: "{{ join_cmd.stdout }}"
     dest: /tmp/join.sh
+    mode: '0755'
