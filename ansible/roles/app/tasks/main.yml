@@ -1,10 +1,21 @@
-- name: Deploy nginx
-  command: kubectl create deployment nginx --image=nginx
+# - name: Deploy nginx
+#   command: kubectl create deployment nginx --image=nginx
+#   environment:
+#     KUBECONFIG: /etc/kubernetes/admin.conf
+#   ignore_errors: yes
+
+# - name: Expose nginx
+#   command: kubectl expose deployment nginx --type=NodePort --port=80
+#   environment:
+#     KUBECONFIG: /etc/kubernetes/admin.conf
+#   ignore_errors: yes
+- name: Deploy custom website
+  command: kubectl create deployment nginx --image=hritamkar/vanillasite
   environment:
     KUBECONFIG: /etc/kubernetes/admin.conf
   ignore_errors: yes
 
-- name: Expose nginx
+- name: Expose nginx service
   command: kubectl expose deployment nginx --type=NodePort --port=80
   environment:
     KUBECONFIG: /etc/kubernetes/admin.conf
