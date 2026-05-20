@@ -68,6 +68,8 @@ Provide:
 ```bash
 cd /root
 git clone https://github.com/hritam2001/kubesible.git
+or
+git clone https://github.com/AvilashBhowmick12/kubesible.git
 cd kubesible
 ```
 
@@ -91,6 +93,8 @@ Apply Terraform configuration:
 
 ```bash
 terraform apply -var="key_name=k8s-terraform"
+or "new key" ->
+terraform apply -var="key_name=my-key.pem"
 ```
 
 Confirm with `yes` when prompted.
@@ -148,7 +152,9 @@ This will:
 SSH into Control Plane:
 
 ```bash
-ssh -i k8s-terraform.pem/my-key.pem ubuntu@<CONTROL_PLANE_IP>
+ssh -i k8s-terraform.pem ubuntu@<CONTROL_PLANE_IP>
+or
+ssh -i my-key.pem ubuntu@<CONTROL_PLANE_IP>
 ```
 
 Check nodes:
