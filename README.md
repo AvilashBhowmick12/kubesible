@@ -148,7 +148,7 @@ This will:
 SSH into Control Plane:
 
 ```bash
-ssh -i k8s-terraform.pem ubuntu@<CONTROL_PLANE_IP>
+ssh -i k8s-terraform.pem/my-key.pem ubuntu@<CONTROL_PLANE_IP>
 ```
 
 Check nodes:
