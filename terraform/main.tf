@@ -4,21 +4,23 @@ module "sg" {
 }
 
 module "control_plane" {
-  source          = "./modules/ec2"
-  name            = "k8s-control-plane"
-  subnet_id       = local.subnet_id
-  sg_id           = module.sg.sg_id
-  instance_type   = var.instance_type
-  key_name        = var.key_name
+  source        = "./modules/ec2"
+  name          = "kubesible-control-plane"
+  subnet_id     = local.subnet_id
+  sg_id         = module.sg.sg_id
+  instance_type = var.instance_type
+  key_name      = var.key_name
+  ami_id        = local.ami_id
 }
 
 module "worker" {
-  source          = "./modules/ec2"
-  name            = "k8s-worker"
-  subnet_id       = local.subnet_id
-  sg_id           = module.sg.sg_id
-  instance_type   = var.instance_type
-  key_name        = var.key_name
+  source        = "./modules/ec2"
+  name          = "kubesible-worker"
+  subnet_id     = local.subnet_id
+  sg_id         = module.sg.sg_id
+  instance_type = var.instance_type
+  key_name      = var.key_name
+  ami_id        = local.ami_id
 }
 
 resource "local_file" "inventory" {

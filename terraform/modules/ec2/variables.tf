@@ -1,5 +1,25 @@
-variable "name" {}
-variable "subnet_id" {}
-variable "sg_id" {}
-variable "instance_type" {}
-variable "key_name" {}
+
+variable "name" {
+  type = string
+}
+
+variable "subnet_id" {
+  type = string
+}
+
+variable "sg_id" {
+  type = string
+}
+
+variable "instance_type" {
+  type = string
+}
+
+variable "key_name" {
+  type = string
+}
+
+variable "ami_id" {
+  type = string
+}
+
