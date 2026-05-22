@@ -1,15 +1,52 @@
+#- hosts: all
+#  become: yes
+#  roles:
+#    - common
+#    - containerd
+#    - kubernetes
+#
+#- hosts: control
+#  become: yes
+#  roles:
+#    - control-plane
+#    - app
+#
+#- hosts: worker
+#  become: yes
+#  roles:
+#    - worker
+#
+---
 - hosts: all
   become: yes
+
+  pre_tasks:
+    - name: Remove old Kubernetes APT repo (stale v1.33 if present)
+      file:
+        path: /etc/apt/sources.list.d/kubernetes.list
+        state: absent
+
+    - name: Remove old Kubernetes APT keyring (if present)
+      file:
+        path: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+        state: absent
+
+    - name: Update apt cache after cleanup
+      apt:
+        update_cache: yes
+
   roles:
     - common
     - containerd
     - kubernetes
+
 
 - hosts: control
   become: yes
   roles:
     - control-plane
     - app
+
 
 - hosts: worker
   become: yes

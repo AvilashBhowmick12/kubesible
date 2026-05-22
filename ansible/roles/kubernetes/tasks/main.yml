@@ -1,9 +1,57 @@
-- name: Install k8s tools
+#
+#- name: Install k8s tools
+#  shell: |
+#    apt-get update
+#    apt-get install -y apt-transport-https ca-certificates curl
+#    curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.33/deb/Release.key | apt-key add -
+#    echo "deb https://pkgs.k8s.io/core:/stable:/v1.33/deb/ /" > /etc/apt/sources.list.d/kubernetes.list
+#    apt-get update
+#    apt-get install -y kubelet kubeadm kubectl
+#    apt-mark hold kubelet kubeadm kubectl
+#
+
+---
+- name: Install dependencies for Kubernetes repository
+  apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gpg
+    state: present
+    update_cache: yes
+
+- name: Create APT keyrings directory
+  file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: "0755"
+
+- name: Add Kubernetes repository GPG key (v1.29 stable)
   shell: |
-    apt-get update
-    apt-get install -y apt-transport-https ca-certificates curl
-    curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.33/deb/Release.key | apt-key add -
-    echo "deb https://pkgs.k8s.io/core:/stable:/v1.33/deb/ /" > /etc/apt/sources.list.d/kubernetes.list
-    apt-get update
-    apt-get install -y kubelet kubeadm kubectl
-    apt-mark hold kubelet kubeadm kubectl
+    curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key \
+    | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+  args:
+    creates: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+
+- name: Add Kubernetes APT repository (v1.29 stable)
+  copy:
+    dest: /etc/apt/sources.list.d/kubernetes.list
+    content: |
+      deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.29/deb/ /
+    mode: "0644"
+
+- name: Update apt cache after adding Kubernetes repo
+  apt:
+    update_cache: yes
+
+- name: Install Kubernetes components
+  apt:
+    name:
+      - kubelet
+      - kubeadm
+      - kubectl
+    state: present
+
+- name: Hold Kubernetes packages at current version
+  command: apt-mark hold kubelet kubeadm kubectl
