@@ -39,6 +39,24 @@
   environment:
     KUBECONFIG: /etc/kubernetes/admin.conf
 
+    # Install Calico network plugin - dated : 22-05-2026
+- name: Copy Calico manifest
+  copy:
+    src: calico.yaml
+    dest: /tmp/calico.yaml
+    mode: "0644"
+
+- name: Apply Calico
+  command: kubectl apply -f /tmp/calico.yaml
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+- name: Install AWS EBS CSI Driver
+  shell: kubectl apply -k "github.com/kubernetes-sigs/aws-ebs-csi-driver/deploy/kubernetes/overlays/stable/?ref=release-1.37"
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+# -- till this much up - 22-05-26   
+
 # ✅ Generate join command
 - name: Generate join command
   command: kubeadm token create --print-join-command

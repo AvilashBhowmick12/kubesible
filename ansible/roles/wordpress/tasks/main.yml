@@ -1,0 +1,47 @@
+---
+- name: Copy Kubernetes manifests to control plane
+  copy:
+    src: "{{ item }}"
+    dest: "/tmp/{{ item }}"
+  loop:
+    - storageclass.yaml
+    - pvc.yaml
+    - mysql.yaml
+    - mysql-service.yaml
+    - wordpress.yaml
+    - wordpress-service.yaml
+
+- name: Apply StorageClass
+  command: kubectl apply -f /tmp/storageclass.yaml
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+- name: Apply PVCs
+  command: kubectl apply -f /tmp/pvc.yaml
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+- name: Deploy MySQL
+  command: kubectl apply -f /tmp/mysql.yaml
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+- name: Create MySQL Service
+  command: kubectl apply -f /tmp/mysql-service.yaml
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+- name: Wait for MySQL pod to be ready
+  command: kubectl rollout status deployment/mysql
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+- name: Deploy WordPress
+  command: kubectl apply -f /tmp/wordpress.yaml
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+- name: Create WordPress Service
+  command: kubectl apply -f /tmp/wordpress-service.yaml
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
