@@ -4,23 +4,25 @@ module "sg" {
 }
 
 module "control_plane" {
-  source        = "./modules/ec2"
-  name          = "kubesible-control-plane"
-  subnet_id     = local.subnet_id
-  sg_id         = module.sg.sg_id
-  instance_type = var.instance_type
-  key_name      = var.key_name
-  ami_id        = local.ami_id
+  source               = "./modules/ec2"
+  name                 = "kubesible-control-plane"
+  subnet_id            = local.subnet_id
+  sg_id                = module.sg.sg_id
+  instance_type        = var.instance_type
+  key_name             = var.key_name
+  ami_id               = local.ami_id
+  iam_instance_profile = local.iam_instance_profile_name
 }
 
 module "worker" {
-  source        = "./modules/ec2"
-  name          = "kubesible-worker"
-  subnet_id     = local.subnet_id
-  sg_id         = module.sg.sg_id
-  instance_type = var.instance_type
-  key_name      = var.key_name
-  ami_id        = local.ami_id
+  source               = "./modules/ec2"
+  name                 = "kubesible-worker"
+  subnet_id            = local.subnet_id
+  sg_id                = module.sg.sg_id
+  instance_type        = var.instance_type
+  key_name             = var.key_name
+  ami_id               = local.ami_id
+  iam_instance_profile = local.iam_instance_profile_name
 }
 
 resource "local_file" "inventory" {
@@ -30,3 +32,9 @@ resource "local_file" "inventory" {
   })
   filename = "../ansible/inventory.ini"
 }
+
+locals {
+  iam_instance_profile_name = "kubesible-ssmroleforinstnacequicksetup"
+}
+
+
