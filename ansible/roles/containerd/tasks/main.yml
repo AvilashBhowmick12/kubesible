@@ -1,16 +1,63 @@
+#- name: Install containerd
+#  apt:
+#    name: containerd
+#    state: present
+#    update_cache: yes
+#
+#- name: Configure containerd
+#  shell: |
+#    mkdir -p /etc/containerd
+#    containerd config default > /etc/containerd/config.toml
+#    sed -i 's/SystemdCgroup = false/SystemdCgroup = true/' /etc/containerd/config.toml
+#
+#- systemd:
+#    name: containerd
+#    state: restarted
+#    enabled: yes
+#
+---
+# roles/containerd/tasks/main.yml
+
+- name: Remove stale Kubernetes APT repo (v1.33 breaks apt)
+  ansible.builtin.file:
+    path: /etc/apt/sources.list.d/kubernetes.list
+    state: absent
+
+- name: Remove stale Kubernetes keyring (if present)
+  ansible.builtin.file:
+    path: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+    state: absent
+
+- name: Update apt cache safely
+  ansible.builtin.apt:
+    update_cache: yes
+    cache_valid_time: 3600
+
 - name: Install containerd
-  apt:
+  ansible.builtin.apt:
     name: containerd
     state: present
-    update_cache: yes
 
-- name: Configure containerd
-  shell: |
-    mkdir -p /etc/containerd
+- name: Ensure containerd config directory exists
+  ansible.builtin.file:
+    path: /etc/containerd
+    state: directory
+    mode: "0755"
+
+- name: Generate default containerd config (only once)
+  ansible.builtin.shell: |
     containerd config default > /etc/containerd/config.toml
-    sed -i 's/SystemdCgroup = false/SystemdCgroup = true/' /etc/containerd/config.toml
+  args:
+    creates: /etc/containerd/config.toml
 
-- systemd:
+- name: Enable systemd cgroups for containerd
+  ansible.builtin.replace:
+    path: /etc/containerd/config.toml
+    regexp: 'SystemdCgroup = false'
+    replace: 'SystemdCgroup = true'
+
+- name: Restart and enable containerd
+  ansible.builtin.systemd:
     name: containerd
     state: restarted
     enabled: yes

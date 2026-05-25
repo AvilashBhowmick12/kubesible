@@ -1,48 +1,22 @@
-#- name: Deploy custom website
-#  command: kubectl create deployment nginx --image=hritamkar/vanillasite
-#  environment:
-#    KUBECONFIG: /etc/kubernetes/admin.conf
-#
-#- name: Wait for deployment to be ready
-#  command: kubectl rollout status deployment/nginx
-#  environment:
-#    KUBECONFIG: /etc/kubernetes/admin.conf
-#
-#- name: Expose nginx service
-#  command: kubectl expose deployment nginx --type=NodePort --port=80
-#  environment:
-#    KUBECONFIG: /etc/kubernetes/admin.conf
-#
-#- name: Deploy custom website
-#  command: kubectl create deployment nginx --image=hritamkar/vanillasite
-#  environment:
-#    KUBECONFIG: /etc/kubernetes/admin.conf
-#  ignore_errors: yes
-#
-#- name: Expose nginx service
-#  command: kubectl expose deployment nginx --type=NodePort --port=80
-#  environment:
-#    KUBECONFIG: /etc/kubernetes/admin.conf
-#  ignore_errors: yes
-#
----
-- name: Copy nginx deployment manifest
-  copy:
-    src: nginx-deployment.yaml
-    dest: /tmp/nginx-deployment.yaml
+# - name: Deploy nginx
+#   command: kubectl create deployment nginx --image=nginx
+#   environment:
+#     KUBECONFIG: /etc/kubernetes/admin.conf
+#   ignore_errors: yes
+
+# - name: Expose nginx
+#   command: kubectl expose deployment nginx --type=NodePort --port=80
+#   environment:
+#     KUBECONFIG: /etc/kubernetes/admin.conf
+#   ignore_errors: yes
+- name: Deploy custom website
+  command: kubectl create deployment nginx --image=hritamkar/vanillasite
   environment:
     KUBECONFIG: /etc/kubernetes/admin.conf
+  ignore_errors: yes
 
-- name: Deploy custom website (idempotent)
-  command: kubectl apply -f /tmp/nginx-deployment.yaml
-  environment:
-    KUBECONFIG: /etc/kubernetes/admin.conf
-
-- name: Expose nginx service (NodePort)
+- name: Expose nginx service
   command: kubectl expose deployment nginx --type=NodePort --port=80
   environment:
     KUBECONFIG: /etc/kubernetes/admin.conf
-  register: expose_result
-  failed_when: >
-    expose_result.rc != 0 and
-    'already exists' not in expose_result.stderr
+  ignore_errors: yes

@@ -11,42 +11,57 @@
 #
 
 ---
-- name: Install dependencies for Kubernetes repository
-  apt:
+# roles/kubernetes/tasks/main.yml
+
+- name: Install Kubernetes repo dependencies
+  ansible.builtin.apt:
     name:
-      - apt-transport-https
       - ca-certificates
       - curl
       - gpg
+      - apt-transport-https
     state: present
     update_cache: yes
 
-- name: Create APT keyrings directory
-  file:
+- name: Ensure APT keyrings directory exists
+  ansible.builtin.file:
     path: /etc/apt/keyrings
     state: directory
     mode: "0755"
 
-- name: Add Kubernetes repository GPG key (v1.29 stable)
-  shell: |
+# Remove any stale repo/key from previous runs (e.g., v1.33)
+- name: Remove old Kubernetes APT repo file (if present)
+  ansible.builtin.file:
+    path: /etc/apt/sources.list.d/kubernetes.list
+    state: absent
+
+- name: Remove old Kubernetes APT keyring (if present)
+  ansible.builtin.file:
+    path: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+    state: absent
+
+- name: Add Kubernetes GPG key (v1.29 stable) to keyring
+  ansible.builtin.shell: |
+    set -euo pipefail
     curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key \
-    | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+      | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
   args:
+    executable: /bin/bash
     creates: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
 
 - name: Add Kubernetes APT repository (v1.29 stable)
-  copy:
+  ansible.builtin.copy:
     dest: /etc/apt/sources.list.d/kubernetes.list
+    mode: "0644"
     content: |
       deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.29/deb/ /
-    mode: "0644"
 
 - name: Update apt cache after adding Kubernetes repo
-  apt:
+  ansible.builtin.apt:
     update_cache: yes
 
-- name: Install Kubernetes components
-  apt:
+- name: Install Kubernetes components (kubelet, kubeadm, kubectl)
+  ansible.builtin.apt:
     name:
       - kubelet
       - kubeadm
@@ -54,4 +69,7 @@
     state: present
 
 - name: Hold Kubernetes packages at current version
-  command: apt-mark hold kubelet kubeadm kubectl
+  ansible.builtin.shell: |
+    apt-mark hold kubelet kubeadm kubectl
+  args:
+    executable: /bin/bash

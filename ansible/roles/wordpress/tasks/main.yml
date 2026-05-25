@@ -31,64 +31,10 @@
   environment:
     KUBECONFIG: /etc/kubernetes/admin.conf
 
-#- name: Wait for MySQL pod to be ready
-#  command: kubectl rollout status deployment/mysql
-#  environment:
-#    KUBECONFIG: /etc/kubernetes/admin.conf
-
-### new - 22-05-26
-# Reset mysql deployment if it exists (clears ProgressDeadlineExceeded state)
-- name: Reset MySQL deployment (ignore if not present)
-  command: kubectl delete deployment mysql --ignore-not-found=true
+- name: Wait for MySQL pod to be ready
+  command: kubectl rollout status deployment/mysql
   environment:
     KUBECONFIG: /etc/kubernetes/admin.conf
-
-- name: Deploy MySQL
-  command: kubectl apply -f /tmp/mysql.yaml
-  environment:
-    KUBECONFIG: /etc/kubernetes/admin.conf
-
-- name: Create MySQL Service
-  command: kubectl apply -f /tmp/mysql-service.yaml
-  environment:
-    KUBECONFIG: /etc/kubernetes/admin.conf
-
-# Wait for PVC to bind (critical on EBS SC with WaitForFirstConsumer)
-- name: Wait for MySQL PVC to be Bound
-  command: kubectl wait --for=jsonpath='{.status.phase}'=Bound pvc/mysql-pvc --timeout=10m
-  environment:
-    KUBECONFIG: /etc/kubernetes/admin.conf
-  register: pvc_wait
-  changed_when: false
-  failed_when: pvc_wait.rc != 0
-
-# Wait for MySQL pod Ready
-- name: Wait for MySQL pod to be Ready
-  command: kubectl wait --for=condition=Ready pod -l app=mysql --timeout=15m
-  environment:
-    KUBECONFIG: /etc/kubernetes/admin.conf
-  register: mysql_wait
-  changed_when: false
-  failed_when: mysql_wait.rc != 0
-
-# If it fails, print the real reason (PVC Pending / CrashLoop / ImagePull etc.)
-- name: Debug MySQL failure (pods/pvc/events/logs)
-  shell: |
-    echo "=== Pods app=mysql ==="
-    kubectl get pods -l app=mysql -o wide || true
-    echo "=== PVCs ==="
-    kubectl get pvc -o wide || true
-    echo "=== Events (last 80) ==="
-    kubectl get events --sort-by=.lastTimestamp | tail -80 || true
-    echo "=== Describe mysql pod ==="
-    POD=$(kubectl get pods -l app=mysql -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || true)
-    [ -n "$POD" ] && kubectl describe pod "$POD" || true
-    echo "=== Logs mysql pod ==="
-    [ -n "$POD" ] && kubectl logs "$POD" --tail=200 || true
-  environment:
-    KUBECONFIG: /etc/kubernetes/admin.conf
-  when: mysql_wait is failed
-  changed_when: false### till this 22-05-26
 
 - name: Deploy WordPress
   command: kubectl apply -f /tmp/wordpress.yaml
